@@ -1,4 +1,5 @@
 local controls = require "controls"
+local PlayerUITools = require("modules.game.ui.player")
 
 --- @class GameLevelState : LevelState
 --- A custom game level state responsible for initializing the level map,
@@ -149,34 +150,7 @@ function GameLevelState:draw()
    -- custom terminal drawing goes here!
 
    -- Display light source status
-   if player then
-      local lightSource = player:get(prism.components.LightSource)
-      if lightSource then
-         local statusText = lightSource:getStatusString()
-         local statusColor = prism.Color4.WHITE
-
-         -- Change color based on fuel level
-         if lightSource:needsFuel() then
-            statusColor = prism.Color4.RED
-         elseif not lightSource.isActive then
-            statusColor = prism.Color4.GREY
-         elseif lightSource:getFuelPercentage() < 0.5 then
-            statusColor = prism.Color4.YELLOW
-         end
-
-         self.display:putString(1, 2, "Light: " .. statusText, statusColor)
-
-         -- Add fuel bar
-         local fuelPercent = lightSource:getFuelPercentage()
-         local barWidth = 20
-         local filledWidth = math.floor(fuelPercent * barWidth)
-         local fuelBar = "[" .. string.rep("=", filledWidth) .. string.rep("-", barWidth - filledWidth) .. "]"
-         self.display:putString(1, 3, "Fuel: " .. fuelBar, statusColor)
-
-         -- Add toggle instruction
-         self.display:putString(1, 4, "Press 'T' to toggle light", prism.Color4.GREY)
-      end
-   end
+   if player then PlayerUITools.DisplayLightSource(self.display, player) end
 
    -- Actually render the terminal out and present it to the screen.
    -- You could use love2d to translate and say center a smaller terminal or
