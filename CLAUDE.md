@@ -42,7 +42,7 @@ love .
 
 The game uses a modular architecture with the following structure:
 
-```
+```bash
 modules/
 ├── game/              # Main game module
 │   ├── module.lua     # Module initialization

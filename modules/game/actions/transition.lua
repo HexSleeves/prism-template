@@ -24,7 +24,7 @@ end
 --- Executes the transition action
 --- @param level Level The current level
 function Transition:perform(level)
-   local depthTracker = self.owner:expect(prism.components.DepthTracker)
+   -- local depthTracker = self.owner:expect(prism.components.DepthTracker)
 
    -- Get the level transition system
    local transitionSystem = level:getSystem(prism.systems.LevelTransition)

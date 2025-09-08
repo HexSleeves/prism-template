@@ -41,8 +41,6 @@ function GameLevelState:__new(display)
 
    -- Place the player character at a starting location
    builder:addActor(prism.actors.Player(), 12, 12)
-   -- Add a kobold to chase the player
-   -- builder:addActor(prism.actors.Kobold(), 18, 12)
    -- Add a torch for testing light sources
    builder:addActor(prism.actors.Torch(), 15, 15)
    -- Add a pickaxe next to the player for mining
@@ -51,7 +49,6 @@ function GameLevelState:__new(display)
    -- Add systems
    builder:addSystems(
       prism.systems.Senses(),
-      -- prism.systems.Sight(),
       prism.systems.LevelTransition(),
       prism.systems.LightManagement(),
       prism.systems.EnhancedSight()

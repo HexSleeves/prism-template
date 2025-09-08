@@ -2,9 +2,16 @@
 --- System for managing monster spawning and scaling based on depth level
 local MonsterScalingSystem = prism.System:extend("MonsterScalingSystem")
 
+--- @class MonsterConfig
+--- @field baseStats {health: integer, attack: integer, defense: integer}
+--- @field scalingFactor number
+--- @field spawnWeight number
+--- @field minDepth integer
+--- @field maxDepth integer?
+
 --- Monster configuration data for different depth ranges
 --- Monster configuration type definition
---- @type table<string, {baseStats: {health: integer, attack: integer, defense: integer}, scalingFactor: number, spawnWeight: number, minDepth: integer, maxDepth: integer?}>
+--- @type table<string, MonsterConfig>
 MonsterScalingSystem.monsterConfigs = {
    -- Shallow depth monsters (1-3)
    CaveRat = {

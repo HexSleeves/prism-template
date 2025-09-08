@@ -11,6 +11,7 @@ prism.defaultCell = prism.cells.Pit
 
 -- Grab our level state and sprite atlas.
 local GameLevelState = require "gamestates.gamelevelstate"
+local IntoTheDepthsLevelState = require "gamestates.intothedepthslevelstate"
 
 -- Load a sprite atlas and configure the terminal-style display,
 love.graphics.setDefaultFilter("nearest", "nearest")
@@ -27,7 +28,8 @@ local manager = spectrum.StateManager()
 -- we put out levelstate on top here, but you could create a main menu
 --- @diagnostic disable-next-line
 function love.load()
-   manager:push(GameLevelState(display))
+   -- Use the new Into the Depths level state starting at surface (depth 0)
+   manager:push(IntoTheDepthsLevelState(display, 0))
    manager:hook()
    spectrum.Input:hook()
 end
