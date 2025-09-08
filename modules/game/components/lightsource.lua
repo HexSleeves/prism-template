@@ -11,8 +11,8 @@ LightSource.name = "LightSource"
 --- Light source type definitions
 LightSource.TYPES = {
    TORCH = "torch",
-   LANTERN = "lantern", 
-   MAGICAL = "magical"
+   LANTERN = "lantern",
+   MAGICAL = "magical",
 }
 
 --- Creates a new LightSource component
@@ -24,11 +24,11 @@ LightSource.TYPES = {
 --- @return LightSource
 function LightSource:__new(options)
    options = options or {}
-   
+
    self.lightType = options.lightType or LightSource.TYPES.TORCH
    self.radius = options.radius or self:getDefaultRadius()
    self.isActive = options.isActive ~= false -- defaults to true unless explicitly false
-   
+
    -- Set fuel and consumption based on light type
    if self.lightType == LightSource.TYPES.MAGICAL then
       self.fuel = 0 -- Infinite fuel for magical lights
@@ -79,18 +79,16 @@ end
 --- Consumes fuel for one turn
 --- @return boolean True if light is still active, false if fuel depleted
 function LightSource:consumeFuel()
-   if not self.isActive or self.fuel == 0 then
-      return self.isActive
-   end
-   
+   if not self.isActive or self.fuel == 0 then return self.isActive end
+
    self.fuel = math.max(0, self.fuel - self.fuelConsumption)
-   
+
    -- Automatically deactivate if fuel runs out
    if self.fuel <= 0 then
       self.isActive = false
       return false
    end
-   
+
    return true
 end
 
@@ -123,9 +121,7 @@ end
 --- Gets the effective light radius (0 if inactive or no fuel)
 --- @return integer Effective light radius
 function LightSource:getEffectiveRadius()
-   if not self.isActive or (self.fuel <= 0 and self.lightType ~= LightSource.TYPES.MAGICAL) then
-      return 0
-   end
+   if not self.isActive or (self.fuel <= 0 and self.lightType ~= LightSource.TYPES.MAGICAL) then return 0 end
    return self.radius
 end
 
@@ -136,7 +132,7 @@ function LightSource:refuel(amount)
    if self.lightType == LightSource.TYPES.MAGICAL then
       return 0 -- Magical lights don't need fuel
    end
-   
+
    local oldFuel = self.fuel
    self.fuel = math.min(self.maxFuel, self.fuel + amount)
    return self.fuel - oldFuel
@@ -145,18 +141,14 @@ end
 --- Gets fuel percentage (0.0 to 1.0)
 --- @return number Fuel percentage, or 1.0 for magical lights
 function LightSource:getFuelPercentage()
-   if self.lightType == LightSource.TYPES.MAGICAL or self.maxFuel == 0 then
-      return 1.0
-   end
+   if self.lightType == LightSource.TYPES.MAGICAL or self.maxFuel == 0 then return 1.0 end
    return self.fuel / self.maxFuel
 end
 
 --- Checks if the light source needs fuel
 --- @return boolean True if fuel is low (< 25%)
 function LightSource:needsFuel()
-   if self.lightType == LightSource.TYPES.MAGICAL then
-      return false
-   end
+   if self.lightType == LightSource.TYPES.MAGICAL then return false end
    return self:getFuelPercentage() < 0.25
 end
 
@@ -166,18 +158,15 @@ function LightSource:getStatusString()
    if self.lightType == LightSource.TYPES.MAGICAL then
       return self.isActive and "Magical light (active)" or "Magical light (inactive)"
    end
-   
-   local status = string.format("%s (%d/%d fuel)", 
-      self.lightType, 
-      math.floor(self.fuel), 
-      self.maxFuel)
-   
+
+   local status = string.format("%s (%d/%d fuel)", self.lightType, math.floor(self.fuel), self.maxFuel)
+
    if not self.isActive then
       status = status .. " [OFF]"
    elseif self:needsFuel() then
       status = status .. " [LOW FUEL]"
    end
-   
+
    return status
 end
 

@@ -5,7 +5,7 @@ Transition.name = "transition"
 Transition.targets = {}
 
 Transition.requiredComponents = {
-   prism.components.DepthTracker
+   prism.components.DepthTracker,
 }
 
 --- @param targetDepth integer The target depth level
@@ -25,13 +25,11 @@ end
 --- @param level Level The current level
 function Transition:perform(level)
    local depthTracker = self.owner:expect(prism.components.DepthTracker)
-   
+
    -- Get the level transition system
    local transitionSystem = level:getSystem(prism.systems.LevelTransition)
-   if not transitionSystem then
-      error("No LevelTransitionSystem found in level")
-   end
-   
+   if not transitionSystem then error("No LevelTransitionSystem found in level") end
+
    -- Perform the transition
    transitionSystem:requestTransition(self.owner, self.targetDepth, level)
 end

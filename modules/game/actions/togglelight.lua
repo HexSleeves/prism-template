@@ -17,10 +17,10 @@ function ToggleLight:perform(level)
    if lightSource then
       local wasActive = lightSource.isActive
       lightSource:toggle()
-      
+
       -- Trigger light source change event for sight updates
       level:trigger("lightSourceChanged", self.owner, lightSource)
-      
+
       -- Log the action
       if prism.logger then
          local status = lightSource.isActive and "on" or "off"

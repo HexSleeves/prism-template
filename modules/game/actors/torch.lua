@@ -8,7 +8,7 @@ prism.registerActor("Torch", function()
          radius = 4,
          lightType = "torch",
          fuel = 150, -- 150 turns of light
-         isActive = true
-      }
+         isActive = true,
+      },
    }
 end)

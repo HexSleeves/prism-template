@@ -11,7 +11,7 @@ DepthTracker.name = "DepthTracker"
 function DepthTracker:__new(currentDepth, maxDepthReached)
    currentDepth = currentDepth or 0
    maxDepthReached = maxDepthReached or currentDepth
-   
+
    self.currentDepth = currentDepth
    self.maxDepthReached = maxDepthReached
 end
@@ -20,9 +20,7 @@ end
 --- @param newDepth integer The new depth level
 function DepthTracker:setDepth(newDepth)
    self.currentDepth = newDepth
-   if newDepth > self.maxDepthReached then
-      self.maxDepthReached = newDepth
-   end
+   if newDepth > self.maxDepthReached then self.maxDepthReached = newDepth end
 end
 
 --- Gets the current depth
@@ -42,10 +40,8 @@ end
 --- @return boolean True if the depth is accessible
 function DepthTracker:canAccessDepth(targetDepth)
    -- Players can always go back to shallower levels
-   if targetDepth <= self.maxDepthReached then
-      return true
-   end
-   
+   if targetDepth <= self.maxDepthReached then return true end
+
    -- Players can only go one level deeper than their maximum
    return targetDepth <= self.maxDepthReached + 1
 end

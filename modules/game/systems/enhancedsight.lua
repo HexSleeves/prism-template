@@ -30,7 +30,7 @@ function EnhancedSightSystem:getBaseSightRange(originalRange, ambientLight, acto
    -- Check if the actor has an active light source
    local ownLightSource = actor:get(prism.components.LightSource)
    local hasActiveLight = ownLightSource and ownLightSource.isActive and ownLightSource:getEffectiveRadius() > 0
-   
+
    -- In very dark conditions (deep underground), without a light source, sight is extremely limited
    if ambientLight <= 0.1 and not hasActiveLight then
       return 2 -- Only 2 cells in the mine without light
@@ -54,19 +54,19 @@ end
 function EnhancedSightSystem:getActiveLightSources(level, actor)
    local actorPos = actor:getPosition()
    if not actorPos then return {} end
-   
+
    local lightSources = {}
-   
+
    -- Check the actor's own light sources
    local ownLightSource = actor:get(prism.components.LightSource)
    if ownLightSource and ownLightSource:getEffectiveRadius() > 0 then
       table.insert(lightSources, {
          source = ownLightSource,
          distance = 0,
-         actor = actor
+         actor = actor,
       })
    end
-   
+
    -- Check other actors' light sources
    for otherActor in level:query(prism.components.LightSource):iter() do
       if otherActor ~= actor then
@@ -79,14 +79,14 @@ function EnhancedSightSystem:getActiveLightSources(level, actor)
                   table.insert(lightSources, {
                      source = lightSource,
                      distance = distance,
-                     actor = otherActor
+                     actor = otherActor,
                   })
                end
             end
          end
       end
    end
-   
+
    return lightSources
 end
 
@@ -98,7 +98,7 @@ end
 function EnhancedSightSystem:calculateEffectiveSightRange(baseSightRange, lightSources, actor)
    local maxLightRadius = 0
    local hasOwnActiveLight = false
-   
+
    for _, lightInfo in ipairs(lightSources) do
       local effectiveRadius = lightInfo.source:getEffectiveRadius()
       -- Light effectiveness decreases with distance
@@ -113,7 +113,7 @@ function EnhancedSightSystem:calculateEffectiveSightRange(baseSightRange, lightS
          maxLightRadius = math.max(maxLightRadius, adjustedRadius)
       end
    end
-   
+
    -- If we have an active light source, combine base sight with light sources
    if hasOwnActiveLight or maxLightRadius > 0 then
       return math.max(baseSightRange, maxLightRadius)
@@ -132,19 +132,19 @@ end
 function EnhancedSightSystem:computeEnhancedFOV(level, sensesComponent, origin, maxDepth, lightSources)
    -- Clear existing sight data
    sensesComponent.cells = prism.SparseGrid()
-   
+
    -- Always see the current position
    sensesComponent.cells:set(origin.x, origin.y, level:getCell(origin.x, origin.y))
-   
+
    -- Create a light map to track illuminated areas
    local lightMap = prism.SparseGrid()
-   
+
    -- Mark areas illuminated by light sources
    for _, lightInfo in ipairs(lightSources) do
       local lightPos = lightInfo.actor:getPosition()
       if lightPos then
          local lightRadius = lightInfo.source:getEffectiveRadius()
-         
+
          -- Use FOV algorithm to determine what the light source illuminates
          prism.computeFOV(level, lightPos, lightRadius, function(x, y)
             local distance = lightPos:distance(prism.Vector2(x, y))
@@ -157,15 +157,15 @@ function EnhancedSightSystem:computeEnhancedFOV(level, sensesComponent, origin, 
          end)
       end
    end
-   
+
    -- Compute FOV with light-enhanced visibility
    prism.computeFOV(level, origin, maxDepth, function(x, y)
       local distance = origin:distance(prism.Vector2(x, y))
       local lightIntensity = lightMap:get(x, y) or 0
-      
+
       -- Determine if this cell is visible
       local visible = false
-      
+
       if distance <= maxDepth then
          if lightIntensity > 0 then
             -- Cell is illuminated by a light source
@@ -180,16 +180,12 @@ function EnhancedSightSystem:computeEnhancedFOV(level, sensesComponent, origin, 
                currentDepth = depthTracker and depthTracker:getCurrentDepth() or 0
             end
             local ambientLight = self:getAmbientLightLevel(currentDepth)
-            
-            if ambientLight > 0.3 or distance <= 2 then
-               visible = true
-            end
+
+            if ambientLight > 0.3 or distance <= 2 then visible = true end
          end
       end
-      
-      if visible then
-         sensesComponent.cells:set(x, y, level:getCell(x, y))
-      end
+
+      if visible then sensesComponent.cells:set(x, y, level:getCell(x, y)) end
    end)
 end
 
@@ -199,29 +195,29 @@ end
 function EnhancedSightSystem:onSenses(level, actor)
    local sensesComponent = actor:get(prism.components.Senses)
    if not sensesComponent then return end
-   
+
    local sightComponent = actor:get(prism.components.Sight)
    if not sightComponent then return end
-   
+
    local actorPos = actor:getPosition()
    if not actorPos then return end
-   
+
    -- Get current depth for ambient light calculation
    local depthTracker = actor:get(prism.components.DepthTracker)
    local currentDepth = depthTracker and depthTracker:getCurrentDepth() or 0
-   
+
    -- Calculate ambient light level
    local ambientLight = self:getAmbientLightLevel(currentDepth)
-   
+
    -- Get base sight range adjusted for ambient light and own light source
    local baseSightRange = self:getBaseSightRange(sightComponent.range, ambientLight, actor)
-   
+
    -- Get active light sources
    local lightSources = self:getActiveLightSources(level, actor)
-   
+
    -- Calculate effective sight range
    local effectiveSightRange = self:calculateEffectiveSightRange(baseSightRange, lightSources, actor)
-   
+
    if sightComponent.fov then
       -- Use enhanced FOV computation
       self:computeEnhancedFOV(level, sensesComponent, actorPos, effectiveSightRange, lightSources)
@@ -232,17 +228,15 @@ function EnhancedSightSystem:onSenses(level, actor)
          for y = actorPos.y - effectiveSightRange, actorPos.y + effectiveSightRange do
             if level:inBounds(x, y) then
                local distance = actorPos:distance(prism.Vector2(x, y))
-               if distance <= effectiveSightRange then
-                  sensesComponent.cells:set(x, y, level:getCell(x, y))
-               end
+               if distance <= effectiveSightRange then sensesComponent.cells:set(x, y, level:getCell(x, y)) end
             end
          end
       end
    end
-   
+
    -- Add visible light sources (they should be visible even outside normal FOV)
    self:addVisibleLightSources(level, actor, sensesComponent, actorPos)
-   
+
    -- Update seen actors
    self:updateSeenActors(level, actor)
 end
@@ -274,15 +268,15 @@ function EnhancedSightSystem:addVisibleLightSources(level, actor, sensesComponen
       if lightActor ~= actor then -- Don't process the actor's own light source
          local lightSource = lightActor:get(prism.components.LightSource)
          local lightPos = lightActor:getPosition()
-         
+
          if lightSource and lightPos and lightSource.isActive and lightSource:getEffectiveRadius() > 0 then
             local distance = actorPos:distance(lightPos)
-            
+
             -- Light sources illuminate their area if they're within a reasonable distance
             -- Light can be seen through walls, so no line of sight check needed
             -- Make light sources visible from much farther away in open areas
             local maxVisibleDistance = math.max(lightSource:getEffectiveRadius() * 8, 50)
-            
+
             if distance <= maxVisibleDistance then
                -- Add the illuminated area around this light source
                self:addIlluminatedArea(level, sensesComponent, lightPos, lightSource:getEffectiveRadius())
@@ -298,10 +292,10 @@ end
 function EnhancedSightSystem:updateSeenActors(level, actor)
    local sensesComponent = actor:get(prism.components.Senses)
    if not sensesComponent then return end
-   
+
    -- Clear existing sight relationships
    actor:removeAllRelationships(prism.relationships.Sees)
-   
+
    -- Add relationships for all actors in visible cells
    for x, y, _ in sensesComponent.cells:each() do
       for other, _ in pairs(level.actorStorage:getSparseMap():get(x, y)) do

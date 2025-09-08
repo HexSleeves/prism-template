@@ -12,11 +12,11 @@ end
 function LightManagementSystem:onTurnEnd(level, actor)
    local lightSource = actor:get(prism.components.LightSource)
    if not lightSource then return end
-   
+
    -- Consume fuel if the light is active
    if lightSource.isActive then
       local wasActive = lightSource:consumeFuel()
-      
+
       -- If the light went out, we might want to notify the player
       if not wasActive and actor:has(prism.components.PlayerController) then
          -- The player's light went out - this could trigger a message or event

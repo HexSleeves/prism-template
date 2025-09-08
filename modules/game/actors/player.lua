@@ -1,3 +1,5 @@
+local MiningTool = require("modules.game.components.miningtool")
+
 prism.registerActor("Player", function()
    return prism.Actor.fromComponents {
       prism.components.Name("Player"),
@@ -13,7 +15,12 @@ prism.registerActor("Player", function()
          radius = 8,
          lightType = "lantern",
          fuel = 200,
-         isActive = true
-      }
+         isActive = true,
+      },
+      prism.components.Inventory {
+         limitCount = 50,
+         limitWeight = 100,
+      },
+      prism.components.MiningTool("basic_pickaxe"),
    }
 end)

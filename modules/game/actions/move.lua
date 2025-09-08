@@ -1,6 +1,4 @@
-local MoveTarget = prism.Target()
-   :isPrototype(prism.Vector2)
-   :range(1)
+local MoveTarget = prism.Target():isPrototype(prism.Vector2):range(1)
 
 ---@class Move : Action
 ---@field name string
@@ -12,7 +10,7 @@ Move.targets = { MoveTarget }
 
 Move.requiredComponents = {
    prism.components.Controller,
-   prism.components.Mover
+   prism.components.Mover,
 }
 
 --- @param level Level

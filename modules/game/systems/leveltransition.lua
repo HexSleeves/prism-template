@@ -17,8 +17,9 @@ function LevelTransitionSystem:requestTransition(actor, targetDepth, level)
 
    -- Validate depth access
    if not depthTracker:canAccessDepth(targetDepth) then
-      prism.log.info("Cannot access depth " ..
-      targetDepth .. " from current max depth " .. depthTracker:getMaxDepthReached())
+      prism.log.info(
+         "Cannot access depth " .. targetDepth .. " from current max depth " .. depthTracker:getMaxDepthReached()
+      )
       return false
    end
 

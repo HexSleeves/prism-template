@@ -24,16 +24,32 @@ function GameLevelState:__new(display)
    -- Add a pit area to the southeast
    builder:rectangle("fill", 20, 20, 25, 25, prism.cells.Pit)
 
+   -- Add some mineable coal deposits around the map
+   local coalPositions = {
+      { 10, 8 },
+      { 14, 10 },
+      { 8, 15 },
+      { 16, 18 },
+      { 22, 12 },
+   }
+
+   for _, pos in ipairs(coalPositions) do
+      local x, y = pos[1], pos[2]
+      builder:setCell(x, y, prism.cells.CoalDeposit())
+   end
+
    -- Place the player character at a starting location
    builder:addActor(prism.actors.Player(), 12, 12)
    -- Add a kobold to chase the player
    -- builder:addActor(prism.actors.Kobold(), 18, 12)
    -- Add a torch for testing light sources
    builder:addActor(prism.actors.Torch(), 15, 15)
+   -- Add a pickaxe next to the player for mining
+   builder:addActor(prism.actors.Pickaxe(), 13, 12)
 
    -- Add systems
    builder:addSystems(
-      prism.systems.Senses(), 
+      prism.systems.Senses(),
       -- prism.systems.Sight(),
       prism.systems.LevelTransition(),
       prism.systems.LightManagement(),
@@ -85,6 +101,30 @@ function GameLevelState:updateDecision(dt, owner, decision)
          return
       end
    end
+
+   if controls.mine.pressed then
+      -- Try mining in each direction around the player
+      local position = owner:getPosition()
+      local directions = {
+         prism.Vector2(-1, -1),
+         prism.Vector2(0, -1),
+         prism.Vector2(1, -1),
+         prism.Vector2(-1, 0),
+         prism.Vector2(1, 0),
+         prism.Vector2(-1, 1),
+         prism.Vector2(0, 1),
+         prism.Vector2(1, 1),
+      }
+
+      for _, dir in ipairs(directions) do
+         local target = position + dir
+         local mine = prism.actions.Mine(owner, target)
+         if self.level:canPerform(mine) then
+            decision:setAction(mine, self.level)
+            return
+         end
+      end
+   end
 end
 
 function GameLevelState:draw()
@@ -110,7 +150,7 @@ function GameLevelState:draw()
 
    -- Say hello!
    self.display:putString(1, 1, "Hello prism!")
-   
+
    -- Display light source status
    local player = self.level:query(prism.components.PlayerController):first()
    if player then
@@ -118,27 +158,27 @@ function GameLevelState:draw()
       if lightSource then
          local statusText = lightSource:getStatusString()
          local statusColor = prism.Color4.WHITE
-         
+
          -- Change color based on fuel level
          if lightSource:needsFuel() then
             statusColor = prism.Color4.RED
          elseif not lightSource.isActive then
-            statusColor = prism.Color4.GRAY
+            statusColor = prism.Color4.GREY
          elseif lightSource:getFuelPercentage() < 0.5 then
             statusColor = prism.Color4.YELLOW
          end
-         
+
          self.display:putString(1, 2, "Light: " .. statusText, statusColor)
-         
+
          -- Add fuel bar
          local fuelPercent = lightSource:getFuelPercentage()
          local barWidth = 20
          local filledWidth = math.floor(fuelPercent * barWidth)
          local fuelBar = "[" .. string.rep("=", filledWidth) .. string.rep("-", barWidth - filledWidth) .. "]"
          self.display:putString(1, 3, "Fuel: " .. fuelBar, statusColor)
-         
+
          -- Add toggle instruction
-         self.display:putString(1, 4, "Press 'T' to toggle light", prism.Color4.GRAY)
+         self.display:putString(1, 4, "Press 'T' to toggle light", prism.Color4.GREY)
       end
    end
 

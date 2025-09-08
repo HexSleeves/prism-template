@@ -1,7 +1,4 @@
-local KickTarget = prism.Target()
-    :with(prism.components.Collider)
-    :range(1)
-    :sensed()
+local KickTarget = prism.Target():with(prism.components.Collider):range(1):sensed()
 
 ---@class KickAction : Action
 local Kick = prism.Action:extend("KickAction")

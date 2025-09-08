@@ -3,6 +3,7 @@ require "prism"
 
 prism.loadModule("prism/spectrum")
 prism.loadModule("prism/extra/sight")
+prism.loadModule("prism/extra/inventory")
 prism.loadModule("modules/game")
 
 -- Used by Geometer for new maps
