@@ -72,7 +72,7 @@ function Mine:perform(level, target)
          if inventory then self:addResourceToInventory(inventory, resource.resourceType, extractedAmount) end
 
          -- Send success message
-         level:sendMessage(prism.messages.ActionMessage({
+         level:yield(prism.messages.ActionMessage({
             actor = self.owner,
             action = "mine",
             success = true,
@@ -91,7 +91,7 @@ function Mine:perform(level, target)
       end
    else
       -- Mining failed
-      level:sendMessage(prism.messages.ActionMessage({
+      level:yield(prism.messages.ActionMessage({
          actor = self.owner,
          action = "mine",
          success = false,
@@ -102,7 +102,7 @@ function Mine:perform(level, target)
 
    -- Send tool degradation message if significant
    if degradation > 0 then
-      level:sendMessage(prism.messages.ActionMessage({
+      level:yield(prism.messages.ActionMessage({
          actor = self.owner,
          action = "tool_degrade",
          message = string.format("Tool degraded by %d durability", degradation),
@@ -112,7 +112,7 @@ function Mine:perform(level, target)
 
       -- Warn if tool is about to break
       if miningTool:needsRepair() and not miningTool:isBroken() then
-         level:sendMessage(prism.messages.ActionMessage({
+         level:yield(prism.messages.ActionMessage({
             actor = self.owner,
             action = "tool_warning",
             message = string.format(
@@ -122,7 +122,7 @@ function Mine:perform(level, target)
             ),
          }))
       elseif miningTool:isBroken() then
-         level:sendMessage(prism.messages.ActionMessage({
+         level:yield(prism.messages.ActionMessage({
             actor = self.owner,
             action = "tool_broken",
             message = string.format("%s has broken!", miningTool:getDisplayName()),
@@ -149,7 +149,7 @@ function Mine:addResourceToInventory(inventory, resourceType, amount)
          -- For now, just send a message
          local level = self.owner.level
          if level then
-            level:sendMessage(prism.messages.ActionMessage({
+            level:yield(prism.messages.ActionMessage({
                actor = self.owner,
                action = "inventory_full",
                message = "Inventory full! " .. (error or "Cannot add item."),
@@ -161,13 +161,18 @@ function Mine:addResourceToInventory(inventory, resourceType, amount)
    end
 end
 
+---@class ResourceActor : Actor
+---@field resourceType string
+---@field unitValue number
+
 --- Creates a resource item actor for the given resource type and amount
 --- @param resourceType string
 --- @param amount integer
---- @return Actor? resourceItem
+--- @return ResourceActor? resourceItem
 function Mine:createResourceItem(resourceType, amount)
    -- Create a basic resource item actor
    -- This is a simplified implementation - in a full game you'd have proper item factories
+   --- @type ResourceActor
    local resourceActor = prism.Actor()
 
    -- Add Item component for inventory compatibility
@@ -177,18 +182,18 @@ function Mine:createResourceItem(resourceType, amount)
       resourceDef = { value = 1, name = resourceType }
    end
 
-   resourceActor:add(prism.components.Item({
+   resourceActor:give(prism.components.Item({
       weight = 1, -- Base weight per unit
       volume = 1, -- Base volume per unit
       stackable = function()
-         return Mine.createResourceItem(nil, resourceType, 1)
+         return Mine.createStaticResourceItem(nil, resourceType, 1)
       end,
       stackLimit = 99, -- Max stack size
       stackCount = amount,
    }))
 
    -- Add a name component for identification
-   resourceActor:add(prism.components.Name(resourceDef.name or resourceType))
+   resourceActor:give(prism.components.Name(resourceDef.name or resourceType))
 
    -- Store resource type for later reference
    resourceActor.resourceType = resourceType
@@ -200,8 +205,8 @@ end
 --- Static method to create resource items (used by stackable function)
 --- @param resourceType string
 --- @param amount integer
---- @return Actor
-function Mine.createResourceItem(_, resourceType, amount)
+--- @return ResourceActor
+function Mine.createStaticResourceItem(_, resourceType, amount)
    local mine = Mine()
    return mine:createResourceItem(resourceType, amount or 1)
 end
@@ -237,7 +242,7 @@ function Mine:validate(level, target)
    if not self.owner then return false, "No owner actor" end
 
    -- Check if target is within bounds
-   if not level:isInBounds(target.x, target.y) then return false, "Target out of bounds" end
+   if not level.map:isInBounds(target.x, target.y) then return false, "Target out of bounds" end
 
    return true
 end

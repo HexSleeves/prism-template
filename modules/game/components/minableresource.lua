@@ -61,14 +61,17 @@ MinableResource.TYPES = {
    },
 }
 
+--- @class MinableResourceParams
+--- @field resourceType string? Type of resource (required if options is table)
+--- @field quantity integer? Starting quantity (defaults based on type)
+--- @field hardness integer? Mining difficulty override
+--- @field depthRequired integer? Minimum depth override
+--- @field value integer? Base value override
+--- @field maxQuantity integer? Maximum quantity override
+--- @field rarity number? Spawn probability override
+
 --- Creates a new MinableResource component
---- @param options table|string Configuration options or resource type name
---- @param options.resourceType string? Type of resource (required if options is table)
---- @param options.quantity integer? Starting quantity (defaults based on type)
---- @param options.hardness integer? Mining difficulty override
---- @param options.depthRequired integer? Minimum depth override
---- @param options.value integer? Base value override
---- @return MinableResource
+--- @param options MinableResourceParams Configuration options
 function MinableResource:__new(options)
    -- Handle string parameter (just resource type)
    if type(options) == "string" then options = { resourceType = options } end
@@ -176,10 +179,8 @@ end
 --- Gets a display name for the resource
 --- @return string Human-readable resource name
 function MinableResource:getDisplayName()
-   local name = self.resourceType:gsub("_", " ")
-   return name:gsub("(%a)([%w_']*)", function(first, rest)
-      return first:upper() .. rest:lower()
-   end)
+   local Utils = require("modules.game.utils")
+   return Utils.toTitleCase(self.resourceType)
 end
 
 --- Gets a string representation of the resource

@@ -15,13 +15,15 @@ LightSource.TYPES = {
    MAGICAL = "magical",
 }
 
+--- @class LightSourceParams
+--- @field radius integer Light radius in tiles
+--- @field fuel integer? Starting fuel (defaults based on type)
+--- @field lightType string? Type of light source (defaults to "torch")
+--- @field isActive boolean? Whether light starts active (defaults to true)
+--- @field fuelConsumption number? Fuel consumed per turn (defaults based on type)
+
 --- Creates a new LightSource component
---- @param options table Configuration options
---- @param options.radius integer Light radius in tiles
---- @param options.fuel integer? Starting fuel (defaults based on type)
---- @param options.lightType string? Type of light source (defaults to "torch")
---- @param options.isActive boolean? Whether light starts active (defaults to true)
---- @return LightSource
+--- @param options LightSourceParams Configuration options
 function LightSource:__new(options)
    options = options or {}
 

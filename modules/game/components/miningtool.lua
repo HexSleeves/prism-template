@@ -57,14 +57,16 @@ MiningTool.DEGRADATION_RATES = {
    [6] = 12, -- Magical materials
 }
 
+--- @class MiningToolParams
+--- @field toolType string? Type of tool (required if options is table)
+--- @field durability integer? Starting durability (defaults to max)
+--- @field power integer? Mining power override
+--- @field efficiency number? Efficiency override
+--- @field repairCost integer? Repair cost override
+--- @field maxDurability integer? Maximum durability override
+
 --- Creates a new MiningTool component
---- @param options table|string Configuration options or tool type name
---- @param options.toolType string? Type of tool (required if options is table)
---- @param options.durability integer? Starting durability (defaults to max)
---- @param options.power integer? Mining power override
---- @param options.efficiency number? Efficiency override
---- @param options.repairCost integer? Repair cost override
---- @return MiningTool
+--- @param options MiningToolParams Configuration options
 function MiningTool:__new(options)
    -- Handle string parameter (just tool type)
    if type(options) == "string" then options = { toolType = options } end
@@ -90,13 +92,14 @@ function MiningTool:__new(options)
    self.durability = options.durability or self.maxDurability
 
    -- Validate properties
+   ---@diagnostic disable-next-line
    self:validate()
 end
 
 --- Gets the tool definition for a given type
 --- @param toolType string The tool type to look up
 --- @return table? Tool definition or nil if not found
-function MiningTool:getToolDefinition(toolType)
+function MiningTool:getToolDefinition(toolType) -- luacheck: no unused args
    -- Check predefined types first
    for _, typeDef in pairs(MiningTool.TYPES) do
       if typeDef.name == toolType then return typeDef end
@@ -105,7 +108,8 @@ function MiningTool:getToolDefinition(toolType)
 end
 
 --- Validates the tool properties
---- @return boolean True if valid, throws error if invalid
+--- Throws error if invalid
+---@return nil
 function MiningTool:validate()
    -- Validate power
    if not self.power or self.power < 1 or self.power > 20 then
@@ -133,7 +137,7 @@ function MiningTool:validate()
       error("MiningTool repairCost must be non-negative, got: " .. tostring(self.repairCost))
    end
 
-   return true
+   return nil
 end
 
 --- Checks if the tool can mine a resource with given hardness
@@ -230,10 +234,8 @@ end
 --- Gets a display name for the tool
 --- @return string Human-readable tool name
 function MiningTool:getDisplayName()
-   local name = self.toolType:gsub("_", " ")
-   return name:gsub("(%a)([%w_']*)", function(first, rest)
-      return first:upper() .. rest:lower()
-   end)
+   local Utils = require("modules.game.utils")
+   return Utils.toTitleCase(self.toolType)
 end
 
 --- Gets a condition description for the tool

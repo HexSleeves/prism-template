@@ -14,9 +14,9 @@ function Transition:__new(targetDepth)
 end
 
 --- Validates if the transition action can be performed
---- @param level Level The current level
+--- @param _level Level The current level
 --- @return boolean True if the action is valid
-function Transition:canPerform(level)
+function Transition:canPerform(_level)
    local depthTracker = self.owner:expect(prism.components.DepthTracker)
    return depthTracker:canAccessDepth(self.targetDepth)
 end

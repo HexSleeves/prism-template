@@ -6,7 +6,7 @@ ToggleLight.requiredComponents = {
    prism.components.LightSource,
 }
 
-function ToggleLight:canPerform(level)
+function ToggleLight:canPerform(_level)
    local lightSource = self.owner:get(prism.components.LightSource)
    return lightSource ~= nil
 end
@@ -15,7 +15,7 @@ end
 function ToggleLight:perform(level)
    local lightSource = self.owner:get(prism.components.LightSource)
    if lightSource then
-      local wasActive = lightSource.isActive
+      -- local wasActive = lightSource.isActive -- For future logging
       lightSource:toggle()
 
       -- Trigger light source change event for sight updates

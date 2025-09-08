@@ -53,6 +53,8 @@ end
 function LightManagementSystem:lightSourceChanged(actor, lightSource)
    -- Force a sight update for all actors when light sources change
    -- This ensures that changes in lighting are immediately reflected in visibility
+
+   --- @type Level
    local level = self.owner -- Systems have an owner property that points to the level
    for sightedActor in level:query(prism.components.Sight):iter() do
       local sensesComponent = sightedActor:get(prism.components.Senses)

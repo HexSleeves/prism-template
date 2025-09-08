@@ -7,7 +7,6 @@ DepthTracker.name = "DepthTracker"
 --- Creates a new DepthTracker component
 --- @param currentDepth integer? Starting depth (defaults to 0 for surface)
 --- @param maxDepthReached integer? Maximum depth reached (defaults to currentDepth)
---- @return DepthTracker
 function DepthTracker:__new(currentDepth, maxDepthReached)
    currentDepth = currentDepth or 0
    maxDepthReached = maxDepthReached or currentDepth

@@ -148,11 +148,7 @@ function GameLevelState:draw()
 
    -- custom terminal drawing goes here!
 
-   -- Say hello!
-   self.display:putString(1, 1, "Hello prism!")
-
    -- Display light source status
-   local player = self.level:query(prism.components.PlayerController):first()
    if player then
       local lightSource = player:get(prism.components.LightSource)
       if lightSource then

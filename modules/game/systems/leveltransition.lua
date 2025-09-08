@@ -8,7 +8,7 @@ local LevelTransitionSystem = prism.System:extend("LevelTransitionSystem")
 --- @param level Level The current level
 --- @return boolean True if transition was successful
 function LevelTransitionSystem:requestTransition(actor, targetDepth, level)
-   local depthTracker = actor:getComponent(prism.components.DepthTracker)
+   local depthTracker = actor:get(prism.components.DepthTracker)
 
    if not depthTracker then
       prism.log.warn("Actor attempting level transition without DepthTracker component")
@@ -39,7 +39,7 @@ end
 --- @param actor Actor The actor to check
 --- @return integer? The current depth, or nil if no DepthTracker component
 function LevelTransitionSystem:getCurrentDepth(actor)
-   local depthTracker = actor:getComponent(prism.components.DepthTracker)
+   local depthTracker = actor:get(prism.components.DepthTracker)
    return depthTracker and depthTracker:getCurrentDepth() or nil
 end
 
@@ -48,7 +48,7 @@ end
 --- @param targetDepth integer The target depth
 --- @return boolean True if the transition is allowed
 function LevelTransitionSystem:canTransitionTo(actor, targetDepth)
-   local depthTracker = actor:getComponent(prism.components.DepthTracker)
+   local depthTracker = actor:get(prism.components.DepthTracker)
    return depthTracker and depthTracker:canAccessDepth(targetDepth) or false
 end
 

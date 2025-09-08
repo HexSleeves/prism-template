@@ -1,4 +1,4 @@
-local MiningTool = require("modules.game.components.miningtool")
+-- local MiningTool = require("modules.game.components.miningtool") -- Unused for now
 
 prism.registerActor("Player", function()
    return prism.Actor.fromComponents {
@@ -8,7 +8,7 @@ prism.registerActor("Player", function()
       prism.components.Collider(),
       prism.components.PlayerController(),
       prism.components.Senses(),
-      prism.components.Sight { range = 2, fov = true },
+      prism.components.Sight { range = 6, fov = true },
       prism.components.Mover { "walk" },
       prism.components.DepthTracker(0), -- Start at surface level
       prism.components.LightSource {
