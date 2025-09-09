@@ -4,6 +4,6 @@ prism.registerActor("MineForeman", function()
       prism.components.Position(),
       prism.components.Drawable { index = "@", color = prism.Color4.BROWN },
       prism.components.Collider({ movetype = "walk" }),
-      prism.components.CityService("info"),
+      prism.components.CityService("foreman"),
    }
 end)

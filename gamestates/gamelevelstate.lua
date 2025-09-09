@@ -46,12 +46,19 @@ function GameLevelState:__new(display)
    -- Add a pickaxe next to the player for mining
    builder:addActor(prism.actors.Pickaxe(), 13, 12)
 
+   -- Add city service NPCs for testing
+   builder:addActor(prism.actors.Shopkeeper(), 10, 10)
+   builder:addActor(prism.actors.StorageMaster(), 14, 10)
+   builder:addActor(prism.actors.Innkeeper(), 10, 14)
+   builder:addActor(prism.actors.MineForeman(), 14, 14)
+
    -- Add systems
    builder:addSystems(
       prism.systems.Senses(),
       prism.systems.LevelTransition(),
       prism.systems.LightManagement(),
-      prism.systems.EnhancedSight()
+      prism.systems.EnhancedSight(),
+      prism.systems.CityServicesSystem()
    )
 
    -- Initialize with the created level and display, the heavy lifting is done by
@@ -120,6 +127,33 @@ function GameLevelState:updateDecision(dt, owner, decision)
          if self.level:canPerform(mine) then
             decision:setAction(mine, self.level)
             return
+         end
+      end
+   end
+
+   if controls.interact.pressed then
+      -- Try interacting with nearby city services
+      local position = owner:getPosition()
+      local directions = {
+         prism.Vector2(-1, -1),
+         prism.Vector2(0, -1),
+         prism.Vector2(1, -1),
+         prism.Vector2(-1, 0),
+         prism.Vector2(1, 0),
+         prism.Vector2(-1, 1),
+         prism.Vector2(0, 1),
+         prism.Vector2(1, 1),
+      }
+
+      for _, dir in ipairs(directions) do
+         local target = position + dir
+         local targetActor = self.level:query():at(target:decompose()):first()
+         if targetActor and targetActor:hasComponent("CityService") then
+            local interact = prism.actions.Interact(owner, targetActor)
+            if self.level:canPerform(interact) then
+               decision:setAction(interact, self.level)
+               return
+            end
          end
       end
    end

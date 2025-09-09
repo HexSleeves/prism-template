@@ -20,6 +20,9 @@ prism.registerActor("Player", function()
       prism.components.Inventory {
          limitCount = 50,
          limitWeight = 100,
+         startingItems = {
+            coins = 100, -- Give player starting money
+         },
       },
       prism.components.MiningTool("basic_pickaxe"),
    }
