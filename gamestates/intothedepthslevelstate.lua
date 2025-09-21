@@ -60,6 +60,10 @@ function IntoTheDepthsLevelState:__new(display, depth)
    -- Initialize with the created level and display
    spectrum.LevelState.__new(self, builder:build(), display)
 
+   -- Initialize senses system for vision
+   local sensesSystem = self.level:getSystem(prism.systems.Senses)
+   if sensesSystem then sensesSystem:postInitialize(self.level) end
+
    -- Initialize the transition system callback
    self:initializeTransitionSystem()
 

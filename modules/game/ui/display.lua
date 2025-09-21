@@ -26,8 +26,16 @@ function GameDisplayHandler.renderLevel(display, level, player)
    local senses = player:get(prism.components.Senses)
    local sight = player:get(prism.components.Sight)
 
-   local primary = senses
-   local secondary = sight
+   -- Debug: Check if senses are working
+   if not senses or not sight then
+      prism.logger.warn("Player missing senses or sight components!")
+      -- Fallback to showing full level
+      display:putLevel(level)
+      return
+   end
+
+   local primary = { senses }
+   local secondary = {}
 
    -- Render the level using the player's senses
    display:putSenses(primary, secondary, level)
