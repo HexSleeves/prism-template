@@ -6,6 +6,22 @@ function EnhancedSightSystem:getRequirements()
    return prism.systems.Senses
 end
 
+--- Reveal the full level for surface play where ambient light is unlimited.
+--- @param level Level
+--- @param sensesComponent Senses
+function EnhancedSightSystem:revealSurfaceVision(level, sensesComponent)
+   local fullVision = prism.SparseGrid()
+
+   local map = level.map
+   for x = 1, map.w do
+      for y = 1, map.h do
+         fullVision:set(x, y, map:get(x, y))
+      end
+   end
+
+   sensesComponent.cells = fullVision
+end
+
 --- Calculate the ambient light level based on depth
 --- @param depth integer Current depth level (0 = surface)
 --- @return number Ambient light level (0.0 to 1.0)
@@ -205,6 +221,13 @@ function EnhancedSightSystem:onSenses(level, actor)
    -- Get current depth for ambient light calculation
    local depthTracker = actor:get(prism.components.DepthTracker)
    local currentDepth = depthTracker and depthTracker:getCurrentDepth() or 0
+
+   if currentDepth <= 0 then
+      self:revealSurfaceVision(level, sensesComponent)
+      self:addVisibleLightSources(level, actor, sensesComponent, actorPos)
+      self:updateSeenActors(level, actor)
+      return
+   end
 
    -- Calculate ambient light level
    local ambientLight = self:getAmbientLightLevel(currentDepth)

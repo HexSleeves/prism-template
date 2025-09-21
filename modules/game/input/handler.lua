@@ -145,7 +145,7 @@ function GameInputHandler.processInteraction(owner, level, state)
    end
 
    -- Handle NPC/service interaction
-   local nearbyActors = level:query():at(position:decompose()):collect()
+   local nearbyActors = level:query():at(position:decompose()):gather()
    for _, actor in ipairs(nearbyActors) do
       if actor ~= owner and actor:has(prism.components.CityService) then
          local interact = prism.actions.Interact(owner, actor)
@@ -167,7 +167,7 @@ function GameInputHandler.processInteraction(owner, level, state)
 
    for _, dir in ipairs(directions) do
       local targetPos = position + dir
-      local adjacentActors = level:query():at(targetPos:decompose()):collect()
+      local adjacentActors = level:query():at(targetPos:decompose()):gather()
 
       for _, actor in ipairs(adjacentActors) do
          if actor:has(prism.components.CityService) then

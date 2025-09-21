@@ -69,6 +69,9 @@ function IntoTheDepthsLevelState:__new(display, depth)
 
    -- Initialize game state for persistent data
    self:initializeGameState()
+
+   -- Configure lighting rules for the current depth
+   self:updateLightingForCurrentDepth()
 end
 
 --- Initializes the level transition system callback
@@ -90,6 +93,22 @@ function IntoTheDepthsLevelState:initializeGameState()
       if progress.maxDepthReached == 0 and self.currentDepth == 0 then
          gameStateSystem:updateProgress("city", "surface_city")
          prism.logger.info("Initialized new game state")
+      end
+   end
+end
+
+--- Applies lighting rules based on the current depth
+function IntoTheDepthsLevelState:updateLightingForCurrentDepth()
+   local player = self.level:query(prism.components.PlayerController):first()
+   if not player then return end
+
+   local lightSource = player:get(prism.components.LightSource)
+   if not lightSource then return end
+
+   if self.currentDepth <= 0 then
+      if lightSource.isActive then
+         lightSource:deactivate()
+         self.level:trigger("lightSourceChanged", player, lightSource)
       end
    end
 end
@@ -324,8 +343,8 @@ function IntoTheDepthsLevelState:findSpawnLocation(level, targetDepth)
    if targetDepth == 0 then return prism.Vector2(20, 15) end
 
    -- For mine levels, find a mine shaft or safe floor tile
-   local map = level:getMap()
-   local width, height = map:getDimensions()
+   local map = level.map
+   local width, height = map.w, map.h
 
    -- First, try to find a mine shaft
    for x = 0, width - 1 do
@@ -369,9 +388,10 @@ function IntoTheDepthsLevelState:initializeNewLevel()
    -- Initialize transition system callback
    self:initializeTransitionSystem()
 
-   -- Initialize monster scaling for current depth
-   local monsterScaling = self.level:getSystem(prism.systems.MonsterScaling)
-   if monsterScaling then monsterScaling:scaleForDepth(self.currentDepth) end
+   -- Monster scaling is handled automatically by the system
+
+   -- Ensure lighting matches the active depth
+   self:updateLightingForCurrentDepth()
 end
 
 --- @param message {type: string, targetDepth: integer}

@@ -66,7 +66,7 @@ function LevelTransitionSystem:validateTransitionRequirements(actor, targetDepth
    if targetDepth > 0 then
       -- Check for mining tool (required for mine levels)
       local hasMiningTool = false
-      local nearbyActors = level:query():at(actor:getPosition():decompose()):collect()
+      local nearbyActors = level:query():at(actor:getPosition():decompose()):gather()
 
       for _, nearbyActor in ipairs(nearbyActors) do
          if nearbyActor:has(prism.components.MiningTool) then

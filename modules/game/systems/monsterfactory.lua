@@ -72,15 +72,16 @@ function MonsterFactory:spawnMonstersInLevel(level, depth, rng)
    end
 
    local spawnedCount = 0
-   local levelSize = level.map.width * level.map.height
+   local levelSize = level.map.w * level.map.h
 
    -- Iterate through all floor tiles and potentially spawn monsters
-   for x = 1, level.map.width do
-      for y = 1, level.map.height do
+   for x = 1, level.map.w do
+      for y = 1, level.map.h do
          local cell = level:getCell(x, y)
 
          -- Only spawn on walkable floor tiles that don't have actors
-         if cell and cell.name == "Floor" and not level:getActorAt(x, y) then
+         local actorsAtPos = level.actorStorage:getSparseMap():get(x, y)
+         if cell and cell.name == "Floor" and not actorsAtPos then
             if scalingSystem:shouldSpawnMonster(depth, levelSize, rng) then
                local monster = self:createRandomMonster(depth, { x = x, y = y }, rng)
                if monster then

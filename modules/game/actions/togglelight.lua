@@ -6,13 +6,21 @@ ToggleLight.requiredComponents = {
    prism.components.LightSource,
 }
 
-function ToggleLight:canPerform(_level)
+function ToggleLight:canPerform(level)
    local lightSource = self.owner:get(prism.components.LightSource)
-   return lightSource ~= nil
+   if not lightSource then return false end
+
+   local depthTracker = self.owner:get(prism.components.DepthTracker)
+   if depthTracker and depthTracker:getCurrentDepth() <= 0 then return false end
+
+   return true
 end
 
 --- @param level Level
 function ToggleLight:perform(level)
+   local depthTracker = self.owner:get(prism.components.DepthTracker)
+   if depthTracker and depthTracker:getCurrentDepth() <= 0 then return end
+
    local lightSource = self.owner:get(prism.components.LightSource)
    if lightSource then
       -- local wasActive = lightSource.isActive -- For future logging

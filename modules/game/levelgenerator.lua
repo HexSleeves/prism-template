@@ -140,6 +140,9 @@ function LevelGenerator.generateMineLevel(builder, depth)
    -- Place mine shafts for transitions
    LevelGenerator._placeMineShafts(builder, adjustedConfig, rooms)
 
+   -- Add monsters and NPCs based on depth
+   LevelGenerator._placeMineActors(builder, adjustedConfig, rooms, depth)
+
    return builder
 end
 
@@ -390,6 +393,48 @@ function LevelGenerator._placeMineShafts(builder, config, rooms)
       local exitX = lastRoom.x + math.floor(lastRoom.width / 2)
       local exitY = lastRoom.y + math.floor(lastRoom.height / 2)
       builder:setCell(exitX, exitY, prism.cells.MineShaft())
+   end
+end
+
+--- Places actors (monsters, NPCs) in mine levels
+--- @param builder LevelBuilder The level builder
+--- @param config table Level configuration
+--- @param rooms table[] List of generated rooms
+--- @param depth integer Current depth
+function LevelGenerator._placeMineActors(builder, config, rooms, depth)
+   -- Place monsters based on depth
+   local monsterCount = math.min(depth * 2, 10) -- Up to 10 monsters max
+
+   for i = 1, monsterCount do
+      local roomIndex = math.random(1, #rooms)
+      local room = rooms[roomIndex]
+
+      -- Choose monster type based on depth
+      local monsterType
+      if depth <= 2 then
+         monsterType = math.random() < 0.7 and "CaveRat" or "SmallSpider"
+      elseif depth <= 5 then
+         monsterType = math.random() < 0.5 and "Kobold" or "Rockworm"
+      else
+         monsterType = math.random() < 0.4 and "ShadowWraith" or "CaveBear"
+      end
+
+      -- Place monster in a random position within the room
+      local x = math.random(room.x + 1, room.x + room.width - 2)
+      local y = math.random(room.y + 1, room.y + room.height - 2)
+
+      local monsterActor = prism.actors[monsterType]()
+      builder:addActor(monsterActor, x, y)
+   end
+
+   -- Always place at least one kobold controller for player interaction
+   if depth >= 1 then
+      local roomIndex = math.random(1, #rooms)
+      local room = rooms[roomIndex]
+      local x = math.floor(room.x + room.width / 2)
+      local y = math.floor(room.y + room.height / 2)
+
+      builder:addActor(prism.actors.Kobold(), x, y)
    end
 end
 

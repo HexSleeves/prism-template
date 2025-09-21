@@ -58,7 +58,7 @@ function GameStateSystem:savePlayerState(player, level)
 
    -- Save nearby items (equipment, tools, etc.)
    if player:getPosition() then
-      local nearbyActors = level:query():at(player:getPosition():decompose()):collect()
+      local nearbyActors = level:query():at(player:getPosition():decompose()):gather()
       for _, nearbyActor in ipairs(nearbyActors) do
          if nearbyActor ~= player then
             local itemData = self:saveActorData(nearbyActor)
@@ -76,7 +76,6 @@ end
 --- Restores player state in a new level
 --- @param level Level The target level
 --- @param spawnPosition Vector2 The position to spawn the player
---- @return Actor The restored player actor
 function GameStateSystem:restorePlayerState(level, spawnPosition)
    local playerState = self.gameState.playerData
    if not playerState then
@@ -87,11 +86,23 @@ function GameStateSystem:restorePlayerState(level, spawnPosition)
    -- Create new player actor
    local player = prism.Actor()
 
-   -- Restore saved components
-   for componentType, componentData in pairs(playerState.components) do
-      if componentType ~= prism.components.Position then -- Position handled separately
+   -- Restore saved components in dependency order
+   local componentOrder = {
+      prism.components.Senses, -- Senses must come first
+      prism.components.Sight, -- Sight requires Senses
+      prism.components.Name,
+      prism.components.Drawable,
+      prism.components.Collider,
+      prism.components.LightSource,
+      prism.components.MiningTool,
+      prism.components.Item,
+   }
+
+   for _, componentType in ipairs(componentOrder) do
+      local componentData = playerState.components[componentType]
+      if componentData then
          local restoredComponent = self:restoreComponent(componentType, componentData)
-         if restoredComponent then player:add(restoredComponent) end
+         if restoredComponent then player:give(restoredComponent) end
       end
    end
 
@@ -128,6 +139,8 @@ function GameStateSystem:saveActorData(actor)
       prism.components.LightSource,
       prism.components.MiningTool,
       prism.components.Item,
+      prism.components.Senses,
+      prism.components.Sight,
    }
 
    local hasRelevantComponents = false
@@ -153,7 +166,7 @@ function GameStateSystem:restoreActor(actorData)
    -- Restore components
    for componentType, componentData in pairs(actorData.components) do
       local restoredComponent = self:restoreComponent(componentType, componentData)
-      if restoredComponent then actor:add(restoredComponent) end
+      if restoredComponent then actor:give(restoredComponent) end
    end
 
    return actor
@@ -254,7 +267,7 @@ function GameStateSystem:savePlayerEquipment(player, level)
 
    -- Find equipment near the player
    if player:getPosition() then
-      local nearbyActors = level:query():at(player:getPosition():decompose()):collect()
+      local nearbyActors = level:query():at(player:getPosition():decompose()):gather()
       for _, actor in ipairs(nearbyActors) do
          if actor ~= player then
             -- Check if this is equipment
