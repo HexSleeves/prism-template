@@ -1,8 +1,10 @@
+local CityService = require("modules.game.components.cityservice")
+
 prism.registerCell("StorageVault", function()
    return prism.Cell.fromComponents {
       prism.components.Name("Storage Vault"),
-      prism.components.Drawable { index = "=", color = prism.Color4.BLUE },
+      prism.components.Drawable { index = "=" },
       prism.components.Collider({ allowedMovetypes = { "walk", "fly" } }),
-      prism.components.CityService("storage"),
+      CityService("storage"),
    }
 end)

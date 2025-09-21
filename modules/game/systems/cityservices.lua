@@ -2,19 +2,34 @@
 local CityServicesSystem = prism.System:extend("CityServicesSystem")
 
 function CityServicesSystem:__new()
-   -- Listen for interaction messages
-   prism.MessageBus:listen("ActionMessage", function(message)
-      if message.actionType == "interact" then self:handleInteraction(message) end
-   end)
+   -- Message bus is handled through onYield method
+end
+
+--- Handle messages from the level
+--- @param level Level The level that yielded
+--- @param event Message The message event
+function CityServicesSystem:onYield(level, event)
+   if prism.messages.ActionMessage:is(event) then
+      ---@cast event ActionMessage
+      if event.action.className == "InteractAction" then self:handleInteraction(event) end
+   end
 end
 
 --- Handle interaction with city services
 --- @param message ActionMessage
 function CityServicesSystem:handleInteraction(message)
-   local actor = message.actor
-   local data = message.data
-   local target = data.target
-   local serviceType = data.serviceType
+   local action = message.action
+   if not action then return end
+
+   ---@cast action InteractAction
+   local actor = action.actor
+   local target = action.target
+
+   -- Get the city service to determine service type
+   local cityService = target:get(prism.components.CityService)
+   if not cityService then return end
+
+   local serviceType = cityService.serviceType
 
    if serviceType == "shop" then
       self:handleShopInteraction(actor, target)
@@ -31,8 +46,8 @@ end
 --- @param actor Actor
 --- @param shop Actor
 function CityServicesSystem:handleShopInteraction(actor, shop)
-   local cityService = shop:getComponent("CityService")
-   local playerInventory = actor:getComponent("Inventory")
+   local cityService = shop:get("CityService")
+   local playerInventory = actor:get("Inventory")
 
    if not playerInventory then return end
 
@@ -44,33 +59,33 @@ end
 --- @param actor Actor
 --- @param shop Actor
 function CityServicesSystem:displayShopMenu(actor, shop)
-   local cityService = shop:getComponent("CityService")
-   local playerInventory = actor:getComponent("Inventory")
+   local cityService = shop:get("CityService")
+   local playerInventory = actor:get("Inventory")
 
    if not cityService or not playerInventory then return end
 
    local playerCoins = playerInventory:getItemCount("coins") or 0
 
-   prism.log.info("=== SHOP MENU ===")
-   prism.log.info("Your coins: " .. playerCoins)
-   prism.log.info("Available items:")
+   prism.logger.info("=== SHOP MENU ===")
+   prism.logger.info("Your coins: " .. playerCoins)
+   prism.logger.info("Available items:")
 
    for itemType, price in pairs(cityService.prices) do
       local canAfford = playerCoins >= price
       local affordText = canAfford and "[AFFORDABLE]" or "[TOO EXPENSIVE]"
-      prism.log.info("  " .. itemType .. " - " .. price .. " coins " .. affordText)
+      prism.logger.info("  " .. itemType .. " - " .. price .. " coins " .. affordText)
    end
 
-   prism.log.info("Items you can sell:")
+   prism.logger.info("Items you can sell:")
    for itemType, _ in pairs(cityService.prices) do
       local playerCount = playerInventory:getItemCount(itemType) or 0
       if playerCount > 0 then
          local sellPrice = math.floor(cityService.prices[itemType] * 0.6)
-         prism.log.info("  " .. itemType .. " x" .. playerCount .. " - " .. sellPrice .. " coins each")
+         prism.logger.info("  " .. itemType .. " x" .. playerCount .. " - " .. sellPrice .. " coins each")
       end
    end
 
-   prism.log.info("Use 'b <item>' to buy, 's <item>' to sell")
+   prism.logger.info("Use 'b <item>' to buy, 's <item>' to sell")
 end
 
 --- Handle buy command
@@ -83,9 +98,9 @@ function CityServicesSystem:handleBuyCommand(actor, shop, itemType, quantity)
    local success, message = buyAction:perform()
 
    if success then
-      prism.log.info("Bought " .. (quantity or 1) .. "x " .. itemType)
+      prism.logger.info("Bought " .. (quantity or 1) .. "x " .. itemType)
    else
-      prism.log.info("Cannot buy: " .. (message or "Unknown error"))
+      prism.logger.info("Cannot buy: " .. (message or "Unknown error"))
    end
 end
 
@@ -99,9 +114,9 @@ function CityServicesSystem:handleSellCommand(actor, shop, itemType, quantity)
    local success, message = sellAction:perform()
 
    if success then
-      prism.log.info("Sold " .. (quantity or 1) .. "x " .. itemType)
+      prism.logger.info("Sold " .. (quantity or 1) .. "x " .. itemType)
    else
-      prism.log.info("Cannot sell: " .. (message or "Unknown error"))
+      prism.logger.info("Cannot sell: " .. (message or "Unknown error"))
    end
 end
 
@@ -109,8 +124,8 @@ end
 --- @param actor Actor
 --- @param storage Actor
 function CityServicesSystem:handleStorageInteraction(actor, storage)
-   local cityService = storage:getComponent("CityService")
-   local playerInventory = actor:getComponent("Inventory")
+   local cityService = storage:get("CityService")
+   local playerInventory = actor:get("Inventory")
 
    if not playerInventory then return end
 
@@ -122,27 +137,27 @@ end
 --- @param actor Actor
 --- @param storage Actor
 function CityServicesSystem:displayStorageMenu(actor, storage)
-   local cityService = storage:getComponent("CityService")
-   local playerInventory = actor:getComponent("Inventory")
+   local cityService = storage:get("CityService")
+   local playerInventory = actor:get("Inventory")
 
    if not cityService or not playerInventory then return end
 
-   prism.log.info("=== STORAGE VAULT ===")
+   prism.logger.info("=== STORAGE VAULT ===")
 
    -- Show items in storage
    local hasStoredItems = false
-   prism.log.info("Items in storage:")
+   prism.logger.info("Items in storage:")
    for itemType, quantity in pairs(cityService.storageItems) do
       if quantity > 0 then
-         prism.log.info("  " .. itemType .. " x" .. quantity)
+         prism.logger.info("  " .. itemType .. " x" .. quantity)
          hasStoredItems = true
       end
    end
 
-   if not hasStoredItems then prism.log.info("  (empty)") end
+   if not hasStoredItems then prism.logger.info("  (empty)") end
 
    -- Show player inventory (items they can deposit)
-   prism.log.info("Your inventory:")
+   prism.logger.info("Your inventory:")
    local hasPlayerItems = false
 
    -- This is a simplified version - in a real implementation you'd iterate through actual inventory
@@ -150,14 +165,14 @@ function CityServicesSystem:displayStorageMenu(actor, storage)
    for _, itemType in ipairs(commonItems) do
       local count = playerInventory:getItemCount(itemType) or 0
       if count > 0 then
-         prism.log.info("  " .. itemType .. " x" .. count)
+         prism.logger.info("  " .. itemType .. " x" .. count)
          hasPlayerItems = true
       end
    end
 
-   if not hasPlayerItems then prism.log.info("  (no depositable items)") end
+   if not hasPlayerItems then prism.logger.info("  (no depositable items)") end
 
-   prism.log.info("Use 'd <item>' to deposit, 'w <item>' to withdraw")
+   prism.logger.info("Use 'd <item>' to deposit, 'w <item>' to withdraw")
 end
 
 --- Handle deposit command
@@ -170,9 +185,9 @@ function CityServicesSystem:handleDepositCommand(actor, storage, itemType, quant
    local success, message = depositAction:perform()
 
    if success then
-      prism.log.info("Deposited " .. (quantity or 1) .. "x " .. itemType)
+      prism.logger.info("Deposited " .. (quantity or 1) .. "x " .. itemType)
    else
-      prism.log.info("Cannot deposit: " .. (message or "Unknown error"))
+      prism.logger.info("Cannot deposit: " .. (message or "Unknown error"))
    end
 end
 
@@ -186,9 +201,9 @@ function CityServicesSystem:handleWithdrawCommand(actor, storage, itemType, quan
    local success, message = withdrawAction:perform()
 
    if success then
-      prism.log.info("Withdrew " .. (quantity or 1) .. "x " .. itemType)
+      prism.logger.info("Withdrew " .. (quantity or 1) .. "x " .. itemType)
    else
-      prism.log.info("Cannot withdraw: " .. (message or "Unknown error"))
+      prism.logger.info("Cannot withdraw: " .. (message or "Unknown error"))
    end
 end
 
@@ -196,19 +211,19 @@ end
 --- @param actor Actor
 --- @param inn Actor
 function CityServicesSystem:handleInnInteraction(actor, inn)
-   local cityService = inn:getComponent("CityService")
+   local cityService = inn:get("CityService")
 
    -- Restore player health (if health system exists)
    -- For now, just log the interaction
-   prism.log.info("Player rested at inn: " .. cityService:getInteractionText())
+   prism.logger.info("Player rested at inn: " .. cityService:getInteractionText())
 end
 
 --- Handle foreman interaction
 --- @param actor Actor
 --- @param foreman Actor
 function CityServicesSystem:handleForemanInteraction(actor, foreman)
-   local cityService = foreman:getComponent("CityService")
-   local depthTracker = actor:getComponent("DepthTracker")
+   local cityService = foreman:get("CityService")
+   local depthTracker = actor:get("DepthTracker")
 
    local info = "Welcome to the mines! "
    if depthTracker then
@@ -216,7 +231,7 @@ function CityServicesSystem:handleForemanInteraction(actor, foreman)
       info = info .. "Max depth reached: " .. depthTracker.maxDepthReached .. "."
    end
 
-   prism.log.info("Mine Foreman: " .. info)
+   prism.logger.info("Mine Foreman: " .. info)
 end
 
 --- Find nearby city services
@@ -224,7 +239,7 @@ end
 --- @param range integer
 --- @return Actor[]
 function CityServicesSystem:findNearbyCityServices(actor, range)
-   local position = actor:getComponent("Position")
+   local position = actor:get("Position")
    if not position then return {} end
 
    local level = actor:getLevel()
@@ -234,7 +249,7 @@ function CityServicesSystem:findNearbyCityServices(actor, range)
    local query = prism.Query():hasComponent("CityService"):hasComponent("Position")
 
    for serviceActor in query:iterate(level) do
-      local servicePos = serviceActor:getComponent("Position")
+      local servicePos = serviceActor:get("Position")
       local distance = math.abs(position.x - servicePos.x) + math.abs(position.y - servicePos.y)
 
       if distance <= range then table.insert(services, serviceActor) end

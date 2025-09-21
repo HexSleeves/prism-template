@@ -14,8 +14,8 @@ function DepositAction:__new(actor, storage, itemType, quantity)
 end
 
 function DepositAction:perform()
-   local cityService = self.storage:getComponent("CityService")
-   local playerInventory = self.actor:getComponent("Inventory")
+   local cityService = self.storage:get("CityService")
+   local playerInventory = self.actor:get("Inventory")
 
    if not cityService or cityService.serviceType ~= "storage" then return false, "Not a storage facility" end
 
@@ -39,14 +39,14 @@ function DepositAction:perform()
       quantity = self.quantity,
    })
 
-   prism.MessageBus:send(message)
+   -- Message is automatically sent by the level when action completes
 
    return true
 end
 
 function DepositAction:canPerform()
-   local cityService = self.storage:getComponent("CityService")
-   local playerInventory = self.actor:getComponent("Inventory")
+   local cityService = self.storage:get("CityService")
+   local playerInventory = self.actor:get("Inventory")
 
    if not cityService or cityService.serviceType ~= "storage" then return false, "Not a storage facility" end
 

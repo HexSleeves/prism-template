@@ -1,11 +1,11 @@
 local MinableResource = require("modules.game.components.minableresource")
 
-prism.registerCell("CoalDeposit", function()
+prism.registerCell("CopperOre", function()
    return prism.Cell.fromComponents {
-      prism.components.Name("Coal Deposit"),
+      prism.components.Name("Copper Ore"),
       prism.components.Drawable { index = "%" },
       prism.components.Collider(),
       prism.components.Opaque(),
-      MinableResource("coal"),
+      MinableResource("copper"),
    }
 end)

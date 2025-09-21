@@ -14,20 +14,20 @@ function MonsterFactory:createMonster(monsterType, depth, position)
    local scaledStats = scalingSystem:calculateScaledStats(monsterType, depth)
 
    if not scaledStats then
-      prism.log.warn("Cannot create " .. monsterType .. " at depth " .. depth)
+      prism.logger.warn("Cannot create " .. monsterType .. " at depth " .. depth)
       return nil
    end
 
    -- Create the base monster actor
    local actorFactory = prism.actors[monsterType]
    if not actorFactory then
-      prism.log.warn("Unknown monster type: " .. monsterType)
+      prism.logger.warn("Unknown monster type: " .. monsterType)
       return nil
    end
 
    local monster = actorFactory()
    if not monster then
-      prism.log.warn("Failed to create monster: " .. monsterType)
+      prism.logger.warn("Failed to create monster: " .. monsterType)
       return nil
    end
 
@@ -92,7 +92,7 @@ function MonsterFactory:spawnMonstersInLevel(level, depth, rng)
       end
    end
 
-   prism.log.info("Spawned " .. spawnedCount .. " monsters at depth " .. depth)
+   prism.logger.info("Spawned " .. spawnedCount .. " monsters at depth " .. depth)
    return spawnedCount
 end
 

@@ -90,7 +90,7 @@ MonsterScalingSystem.monsterConfigs = {
 function MonsterScalingSystem:calculateScaledStats(monsterType, depth)
    local config = self.monsterConfigs[monsterType]
    if not config then
-      prism.log.warn("Unknown monster type: " .. monsterType)
+      prism.logger.warn("Unknown monster type: " .. monsterType)
       return nil
    end
 

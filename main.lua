@@ -4,13 +4,13 @@ require "prism"
 prism.loadModule("prism/spectrum")
 prism.loadModule("prism/extra/sight")
 prism.loadModule("prism/extra/inventory")
+prism.loadModule("prism/extra/log")
 prism.loadModule("modules/game")
 
 -- Used by Geometer for new maps
 prism.defaultCell = prism.cells.Pit
 
 -- Grab our level state and sprite atlas.
-local GameLevelState = require "gamestates.gamelevelstate"
 local IntoTheDepthsLevelState = require "gamestates.intothedepthslevelstate"
 
 -- Load a sprite atlas and configure the terminal-style display,

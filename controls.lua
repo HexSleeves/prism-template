@@ -19,6 +19,7 @@ return spectrum.Input.Controls {
       toggle_light   = "t",
       mine           = "m",
       interact       = "space",
+      return_surface = "r",
    },
    -- Pairs are controls that map to either 4 or 8 directions.
    -- With only 4 directions, the order is up, left, right, down.

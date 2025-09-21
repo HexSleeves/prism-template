@@ -13,9 +13,51 @@ function BuyAction:__new(actor, shop, itemType, quantity)
    self.quantity = quantity or 1
 end
 
+--- Create an item actor based on the item type
+--- @param itemType string
+--- @return Actor?
+function BuyAction:createItemActor(itemType)
+   -- Map item types to actor constructors
+   local itemActors = {
+      coal = function()
+         return prism.Actor.fromComponents {
+            prism.components.Name("Coal"),
+            prism.components.Item { weight = 1, volume = 1, stackable = true, stackLimit = 99 },
+         }
+      end,
+      copper = function()
+         return prism.Actor.fromComponents {
+            prism.components.Name("Copper Ore"),
+            prism.components.Item { weight = 2, volume = 1, stackable = true, stackLimit = 50 },
+         }
+      end,
+      iron = function()
+         return prism.Actor.fromComponents {
+            prism.components.Name("Iron Ore"),
+            prism.components.Item { weight = 3, volume = 2, stackable = true, stackLimit = 25 },
+         }
+      end,
+      torch = function()
+         return prism.Actor.fromComponents {
+            prism.components.Name("Torch"),
+            prism.components.Item { weight = 1, volume = 1, stackable = true, stackLimit = 20 },
+            prism.components.LightSource { radius = 3, duration = 100 },
+         }
+      end,
+      basic_pickaxe = function()
+         return prism.actors.Pickaxe()
+      end,
+   }
+
+   local createActor = itemActors[itemType]
+   if createActor then return createActor() end
+
+   return nil
+end
+
 function BuyAction:perform()
-   local cityService = self.shop:getComponent("CityService")
-   local playerInventory = self.actor:getComponent("Inventory")
+   local cityService = self.shop:get(prism.components.CityService)
+   local playerInventory = self.actor:get(prism.components.Inventory)
 
    if not cityService or cityService.serviceType ~= "shop" then return false, "Not a shop" end
 
@@ -27,33 +69,51 @@ function BuyAction:perform()
 
    local totalCost = price * self.quantity
 
-   -- Check if player has enough money (assuming money is stored as "coins" in inventory)
-   local playerCoins = playerInventory:getItemCount("coins") or 0
+   -- Check if player has enough money
+   local playerCoins = 0
+   for coinActor in playerInventory:query(prism.components.Name):iter() do
+      local name = coinActor:get(prism.components.Name)
+      if name and name.name:lower() == "coins" then
+         local item = coinActor:get(prism.components.Item)
+         playerCoins = playerCoins + (item and item.stackCount or 1)
+      end
+   end
+
    if playerCoins < totalCost then return false, "Not enough coins" end
 
-   -- Check if player has inventory space
-   if not playerInventory:canAddItem(self.itemType, self.quantity) then return false, "Not enough inventory space" end
+   -- Create item actors and add them to inventory
+   for i = 1, self.quantity do
+      local itemActor = self:createItemActor(self.itemType)
+      if itemActor then playerInventory:addItem(itemActor) end
+   end
 
-   -- Perform the transaction
-   playerInventory:removeItem("coins", totalCost)
-   playerInventory:addItem(self.itemType, self.quantity)
+   -- Remove coins (simplified - in a real game you'd have proper coin items)
+   local coinsToRemove = totalCost
+   for coinActor in playerInventory:query(prism.components.Name):iter() do
+      if coinsToRemove <= 0 then break end
+      local name = coinActor:get(prism.components.Name)
+      if name and name.name:lower() == "coins" then
+         local item = coinActor:get(prism.components.Item)
+         local stackCount = item and item.stackCount or 1
 
-   -- Send transaction message
-   local message = prism.messages.ActionMessage(self.actor, "buy", {
-      shop = self.shop,
-      itemType = self.itemType,
-      quantity = self.quantity,
-      totalCost = totalCost,
-   })
+         if stackCount <= coinsToRemove then
+            playerInventory:removeItem(coinActor)
+            coinsToRemove = coinsToRemove - stackCount
+         else
+            item.stackCount = item.stackCount - coinsToRemove
+            coinsToRemove = 0
+         end
+      end
+   end
 
-   prism.MessageBus:send(message)
+   -- Message is automatically sent by the level when action completes
 
    return true
 end
 
 function BuyAction:canPerform()
-   local cityService = self.shop:getComponent("CityService")
-   local playerInventory = self.actor:getComponent("Inventory")
+   local cityService = self.shop:get(prism.components.CityService)
+   local playerInventory = self.actor:get(prism.components.Inventory)
 
    if not cityService or cityService.serviceType ~= "shop" then return false, "Not a shop" end
 
@@ -63,11 +123,21 @@ function BuyAction:canPerform()
    if not price then return false, "Item not available" end
 
    local totalCost = price * self.quantity
-   local playerCoins = playerInventory:getItemCount("coins") or 0
+
+   -- Check if player has enough coins
+   local playerCoins = 0
+   for coinActor in playerInventory:query(prism.components.Name):iter() do
+      local name = coinActor:get(prism.components.Name)
+      if name and name.name:lower() == "coins" then
+         local item = coinActor:get(prism.components.Item)
+         playerCoins = playerCoins + (item and item.stackCount or 1)
+      end
+   end
 
    if playerCoins < totalCost then return false, "Not enough coins" end
 
-   if not playerInventory:canAddItem(self.itemType, self.quantity) then return false, "Not enough inventory space" end
+   -- Check if we can create the item
+   if not self:createItemActor(self.itemType) then return false, "Cannot create item" end
 
    return true
 end
